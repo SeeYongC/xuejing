@@ -1,5 +1,8 @@
-﻿fastapi>=0.115.0
-uvicorn[standard]>=0.30.0
-openai>=1.50.0
-pydantic>=2.9.0
-sqlalchemy>=2.0.0
+# 学历路径分析与推荐系统 运行依赖
+#
+# Python 标准库负责 Tkinter 登录、SQLite、文件与数据处理；
+# React 主界面通过 pywebview 嵌入桌面窗口。
+#
+# 数据采集与文档生成所需依赖见 requirements-dev.txt。
+
+pywebview>=5.0

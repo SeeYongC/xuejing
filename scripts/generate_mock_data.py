@@ -1,4 +1,8 @@
-"""Generate mock e-commerce dataset for DataAgent demo."""
+"""生成模拟电商数据集，供问数通演示与答辩使用。
+
+订单时间范围从 2025-01-01 一直生成到"运行脚本的当天"，
+这样"上月""近30天"这类相对时间的提问才不会查空。
+"""
 import sqlite3, random, os
 from datetime import date, timedelta
 
@@ -67,7 +71,7 @@ MODELS = ["Pro","Max","Plus","Lite","X","S","SE",""]
 MONTHLY_MULT = {1:0.7,2:0.5,3:0.8,4:0.9,5:1.0,6:1.4,7:1.0,8:0.9,9:0.9,10:1.0,11:1.8,12:1.6}
 
 
-def generate():
+def generate_csy():
     os.makedirs(DB_DIR, exist_ok=True)
     if os.path.exists(DB_PATH):
         os.remove(DB_PATH)
@@ -116,7 +120,8 @@ def generate():
     orders, order_items = [], []
     oid, oiid = 1, 1
     current = date(2025,1,1)
-    while current <= date(2026,6,30):
+    end_date = date.today()          # 关键：一直生成到今天，保证相对时间查询有数据
+    while current <= end_date:
         mult = MONTHLY_MULT.get(current.month, 1.0)
         if current.weekday() >= 5: mult *= 1.3
         daily = max(1, int(random.gauss(18 * mult, 5)))
@@ -163,4 +168,4 @@ def generate():
         print(f'  "{q}"')
 
 if __name__ == "__main__":
-    generate()
+    generate_csy()

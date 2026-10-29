@@ -1,2 +1,6 @@
 -r requirements.txt
-pytest>=8.0.0
+pytest>=7.4.0              # 单元测试
+reportlab>=4.0.0           # 生成交付文档 PDF
+pypdf>=4.0.0               # 解析专升本 PDF
+xlrd>=2.0.0                # 解析广东省考职位表 .xls
+rapidocr-onnxruntime>=1.4  # 就业报告图片型 PDF 的 OCR

@@ -20,7 +20,7 @@ METRICS = [
     ("user_retention", "留存率", "次日留存", "运营部", "orders", "用户首次购买后次日再次购买的比例", "", "用户在首次购买后第二天仍有购买行为的比例", "需自关联 orders 表"),
     ("user_retention", "留存率", "7日留存", "运营部", "orders", "用户首次购买后7日内再次购买的比例", "", "用户在首次购买后7天内仍有购买行为的比例", ""),
 ]
-def seed():
+def seed_csy():
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.executescript("""CREATE TABLE IF NOT EXISTS metric_definitions (definition_id INTEGER PRIMARY KEY AUTOINCREMENT, metric_key TEXT NOT NULL, metric_name TEXT NOT NULL, definition_name TEXT NOT NULL, owner_department TEXT, data_source TEXT, sql_condition TEXT NOT NULL, sql_notes TEXT, description TEXT NOT NULL, business_rules TEXT, is_active INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')));CREATE TABLE IF NOT EXISTS user_metric_preferences (preference_id INTEGER PRIMARY KEY AUTOINCREMENT, user_identifier TEXT NOT NULL, metric_key TEXT NOT NULL, definition_id INTEGER NOT NULL, last_used_at TEXT DEFAULT (datetime('now')), UNIQUE(user_identifier, metric_key));CREATE INDEX IF NOT EXISTS idx_metric_defs_key ON metric_definitions(metric_key);CREATE INDEX IF NOT EXISTS idx_metric_prefs_user ON user_metric_preferences(user_identifier);""")
@@ -37,4 +37,4 @@ def seed():
     conn.close()
     print(f"\nTotal: {len(METRICS)} definitions across {len(set(m[0] for m in METRICS))} metrics")
 if __name__ == "__main__":
-    seed()
+    seed_csy()

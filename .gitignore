@@ -11,10 +11,27 @@ venv/
 # Database files (real data)
 *.db
 !data/ecommerce.db
-!data/test_shop.db
 
-# Config with real passwords
-connections.json
+# 本地配置（含 API Key，不要提交）
+config.json
+
+# PyInstaller 产物
+*.spec
+!学径.spec
+
+# 打包用的临时虚拟环境（干净环境打包比在 Anaconda 里快得多）
+.build-venv/
+
+# 前端依赖与本地缓存
+frontend/node_modules/
+.npm-cache/
+frontend/tsconfig.tsbuildinfo
+
+# 原始数据体积较大，保留本地，由采集脚本重新下载
+data/raw/
+
+# 用户给旧版的压缩备份，不纳入源码仓库
+gcc_py_aidata.zip
 
 # IDE
 .vscode/
