@@ -92,3 +92,28 @@ def test_undergraduate_analysis_has_no_zsb_path_csy(analyzer_csy):
     tuimian = next(item for item in result["recommendations"] if item["key"] == "tuimian")
     assert tuimian["status"] == "需核实"
     assert any("推免资格" in item for item in tuimian["gaps"])
+
+
+def test_grade_and_budget_changes_affect_analysis_csy(analyzer_csy):
+    """修改年级或预算后，资格状态、匹配分和摘要必须变化。"""
+    base = {
+        "education_level": "专科",
+        "major": "计算机",
+        "grade": "大二",
+        "score": "专业中游",
+        "budget": "1-3 万",
+        "region": "广州",
+        "goal": "升学（专插本 / 考研）",
+    }
+    earlier = analyzer_csy.analyze_csy(base)
+    later_profile = dict(base, grade="大三", budget="6 万以上")
+    later = analyzer_csy.analyze_csy(later_profile)
+
+    earlier_zsb = next(item for item in earlier["recommendations"] if item["key"] == "zsb")
+    later_zsb = next(item for item in later["recommendations"] if item["key"] == "zsb")
+    assert earlier_zsb["status"] == "暂不适用"
+    assert later_zsb["status"] == "可报"
+    assert later_zsb["score"] > earlier_zsb["score"]
+    assert earlier["summary"] != later["summary"]
+    assert later["input_snapshot"]["grade"] == "大三"
+    assert later["input_snapshot"]["budget"] == "6 万以上"

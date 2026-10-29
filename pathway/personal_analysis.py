@@ -347,15 +347,17 @@ class PersonalAnalyzer:
             "%s（%s）" % (level, normalized["undergrad_type"])
             if level == "本科" and normalized["undergrad_type"] else level
         )
-        summary = "%s · %s · %s · 目标：%s" % (
+        summary = "%s · %s · %s · 预算：%s · 目标：%s" % (
             degree_label,
             normalized["major"],
             normalized["grade"],
+            normalized["budget"] or "未填写",
             normalized["goal"],
         )
         return {
             "profile_ready": True,
             "summary": summary,
+            "input_snapshot": normalized,
             "profile_gaps": gaps,
             "recommendations": recommendations,
             "rules_version": "1.0",

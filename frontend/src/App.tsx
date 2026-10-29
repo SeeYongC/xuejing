@@ -902,9 +902,11 @@ function OverviewPage({ bootstrap }: { bootstrap: any }) {
 
 function PersonalAnalysisPanel({
   profile,
+  refreshKey,
   onNavigate,
 }: {
   profile: Profile
+  refreshKey: number
   onNavigate: (p: PageKey) => void
 }) {
   const [analysis, setAnalysis] = useState<any>(null)
@@ -923,12 +925,19 @@ function PersonalAnalysisPanel({
     }
   }
 
-  useEffect(() => { void runAnalysis() }, [profile])
+  useEffect(() => { void runAnalysis() }, [refreshKey])
 
   return (
     <SectionCard
       title="个人条件分析"
-      extra={<button className="ghost-btn" onClick={runAnalysis} disabled={loading}>{loading ? '分析中...' : '重新分析'}</button>}
+      extra={(
+        <div className="card-tools">
+          <span className="muted">使用当前表单内容</span>
+          <button className="ghost-btn" onClick={runAnalysis} disabled={loading}>
+            {loading ? '分析中...' : '重新分析'}
+          </button>
+        </div>
+      )}
     >
       {error && <div className="notice error"><Icon name="warn" size={16} /><span>{error}</span></div>}
       {loading && !analysis && <div className="empty">正在按固定流程分析个人条件...</div>}
@@ -1001,20 +1010,30 @@ function ProfilePage({
   onNavigate: (p: PageKey) => void
 }) {
   const [draft, setDraft] = useState<Profile>(profile)
+  const [hasUserEdited, setHasUserEdited] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [analysisVersion, setAnalysisVersion] = useState(0)
   const [favorites, setFavorites] = useState<any[]>([])
   const [favoriteFilter, setFavoriteFilter] = useState('全部')
   const [favoriteError, setFavoriteError] = useState('')
   const [favoriteLoading, setFavoriteLoading] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [noteDraft, setNoteDraft] = useState('')
-  const set = (key: keyof Profile, value: string) => setDraft((current) => {
-    const next = { ...current, [key]: value } as Profile
-    if (key === 'education_level' && value !== '本科') next.undergrad_type = ''
-    return next
-  })
+  const set = (key: keyof Profile, value: string) => {
+    setHasUserEdited(true)
+    setDraft((current) => {
+      const next = { ...current, [key]: value } as Profile
+      if (key === 'education_level' && value !== '本科') next.undergrad_type = ''
+      return next
+    })
+  }
+  const dirty = JSON.stringify(draft) !== JSON.stringify(profile)
+
+  useEffect(() => {
+    if (!hasUserEdited) setDraft(profile)
+  }, [profile, hasUserEdited])
 
   const loadFavorites = async () => {
     setFavoriteLoading(true)
@@ -1065,6 +1084,8 @@ function ProfilePage({
       const result = await api.saveProfile(draft)
       if (!result?.success) throw new Error(result?.error || '个人信息保存失败')
       onChange(draft)
+      setHasUserEdited(false)
+      setAnalysisVersion((version) => version + 1)
       setSaved(true)
       setTimeout(() => setSaved(false), 1800)
     } catch (reason) {
@@ -1077,8 +1098,11 @@ function ProfilePage({
   return (
     <div className="page">
       <div className="page-head">
-        <div><h2>个人信息</h2><p>只用于维护基础资料，不替你做决定</p></div>
-        {saved && <span className="pill green">已保存</span>}
+        <div><h2>个人信息</h2><p>修改后可立即重新分析；保存后会同步到账号和其他页面</p></div>
+        <div className="page-status">
+          {dirty && !saving && <span className="pill amber">有未保存修改</span>}
+          {saved && <span className="pill green">已保存并重新分析</span>}
+        </div>
       </div>
       {error && <div className="notice error" aria-live="polite"><Icon name="warn" size={16} /><span>{error}</span></div>}
       <SectionCard title="基础资料">
@@ -1111,7 +1135,7 @@ function ProfilePage({
         </div>
       </SectionCard>
 
-      <PersonalAnalysisPanel profile={profile} onNavigate={onNavigate} />
+      <PersonalAnalysisPanel profile={draft} refreshKey={analysisVersion} onNavigate={onNavigate} />
 
       <SectionCard
         title="我的关注"
