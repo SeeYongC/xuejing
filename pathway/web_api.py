@@ -12,6 +12,7 @@ from .analysis import PathAnalysis
 from .auth import UserStore
 from .database import PathwayDatabase
 from .eligibility import diagnose_all_csy
+from .personal_analysis import PersonalAnalyzer
 from .paths import database_file_csy, users_file_csy
 
 SOURCE_LINKS_CSY = [
@@ -134,6 +135,7 @@ class WebApi:
     def __init__(self, user: dict = None):
         self.db = PathwayDatabase(database_file_csy())
         self.analysis = PathAnalysis(self.db)
+        self.personal_analyzer = PersonalAnalyzer(self.db, self.analysis)
         self.user = user or {}
         self.profile = self.load_profile_csy()
 
@@ -286,6 +288,12 @@ class WebApi:
         merged = dict(self.profile)
         merged.update(profile or {})
         return diagnose_all_csy(merged)
+
+    def personal_analysis_csy(self, profile: dict = None) -> dict:
+        """按固定规则分析个人条件与公开数据。"""
+        merged = dict(self.profile)
+        merged.update(profile or {})
+        return self.personal_analyzer.analyze_csy(merged)
 
     # ------------------------------------------------------ 专科 / 本科
 

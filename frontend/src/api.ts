@@ -29,6 +29,7 @@ type PyApi = {
   bootstrap: () => Promise<any>
   save_profile: (profile: Profile) => Promise<any>
   diagnose: (profile: Profile) => Promise<any>
+  personal_analysis_csy: (profile: Profile) => Promise<any>
   compare_paths: (level: string) => Promise<any>
   level_summary: (level: string) => Promise<any>
   zsb_majors: (level: string, keyword: string, discipline: string, basic_subject: string) => Promise<any>
@@ -180,6 +181,30 @@ export const api = {
         summary: '省考一般在大四上学期报名、年底笔试。',
       },
     ])
+  },
+  async personalAnalysis(profile: Profile) {
+    return callPy('personal_analysis_csy', [profile], {
+      profile_ready: Boolean(profile.education_level && profile.major && profile.grade && profile.region && profile.goal),
+      summary: `${profile.education_level || '未填写'} · ${profile.major || '专业未填写'} · ${profile.grade || '年级未填写'}`,
+      profile_gaps: profile.education_level ? [] : ['请补充学历层次'],
+      recommendations: profile.education_level ? [
+        {
+          key: profile.education_level === '专科' ? 'zsb' : 'kaoyan',
+          title: profile.education_level === '专科' ? '专插本' : '本科毕业后考研',
+          status: '可报',
+          match_level: '优先了解',
+          score: 86,
+          reasons: ['资格符合基本条件', '与你的升学目标一致'],
+          evidence: ['示例数据：请运行桌面版读取本地 SQLite'],
+          gaps: [],
+          next_checks: ['查看对应公开数据，并以当年官方公告为准'],
+          page: profile.education_level === '专科' ? 'college' : 'undergrad',
+        },
+      ] : [],
+      rules_version: '1.0',
+      calculated_at: new Date().toISOString().slice(0, 10),
+      note: '匹配分只表示资料与公开数据的适配程度，不是录取概率。',
+    })
   },
   async comparePaths(level: string) {
     return callPy('compare_paths', [level], [])

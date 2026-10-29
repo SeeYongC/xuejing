@@ -10,7 +10,7 @@ from typing import Optional
 
 APP_NAME_CSY = "学历路径分析与推荐系统"
 APP_FULL_NAME_CSY = "基于公开数据的本专科学历路径分析与推荐系统"
-APP_VERSION_CSY = "1.0"
+APP_VERSION_CSY = "1.2"
 
 
 def is_frozen_csy() -> bool:

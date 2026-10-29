@@ -126,7 +126,7 @@ function Topbar({ profile, bootstrap }: { profile: Profile; bootstrap: any }) {
             <div className="modal-head">
               <div>
                 <h3>{dialog === 'sources' ? '数据来源' : '关于学径'}</h3>
-                <p>{dialog === 'sources' ? '仅展示系统实际使用的公开数据渠道' : '学历与升学数据平台 · v1.0'}</p>
+                <p>{dialog === 'sources' ? '仅展示系统实际使用的公开数据渠道' : '学历与升学数据平台 · v1.2'}</p>
               </div>
               <button className="icon-btn" aria-label="关闭" onClick={() => setDialog(null)}><Icon name="close" /></button>
             </div>
@@ -152,7 +152,7 @@ function Topbar({ profile, bootstrap }: { profile: Profile; bootstrap: any }) {
                 <p><b>基于公开数据的本专科学历路径分析与推荐系统</b></p>
                 <p>面向广东省专科、本科在校生，整理升学、考研、考公和就业公开数据，帮助用户查看路径差异、报名节点与数据来源。</p>
                 <p>系统只做资格与信息展示，不预测录取概率，也不以升学率直接判断路径优劣。</p>
-                <p className="muted">版本 1.0 · 本地离线运行</p>
+                <p className="muted">版本 1.2 · 本地离线运行</p>
               </div>
             )}
           </section>
@@ -900,7 +900,106 @@ function OverviewPage({ bootstrap }: { bootstrap: any }) {
   )
 }
 
-function ProfilePage({ profile, onChange }: { profile: Profile; onChange: (p: Profile) => void }) {
+function PersonalAnalysisPanel({
+  profile,
+  onNavigate,
+}: {
+  profile: Profile
+  onNavigate: (p: PageKey) => void
+}) {
+  const [analysis, setAnalysis] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const runAnalysis = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      setAnalysis(await api.personalAnalysis(profile))
+    } catch (reason) {
+      setError(`个人条件分析失败：${errorText(reason)}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { void runAnalysis() }, [profile])
+
+  return (
+    <SectionCard
+      title="个人条件分析"
+      extra={<button className="ghost-btn" onClick={runAnalysis} disabled={loading}>{loading ? '分析中...' : '重新分析'}</button>}
+    >
+      {error && <div className="notice error"><Icon name="warn" size={16} /><span>{error}</span></div>}
+      {loading && !analysis && <div className="empty">正在按固定流程分析个人条件...</div>}
+      {analysis && (
+        <div className="analysis-panel">
+          <div className="analysis-summary">
+            <div>
+              <b>{analysis.summary}</b>
+              <span>{analysis.note}</span>
+            </div>
+            <span className="pill gray">规则 v{analysis.rules_version} · {analysis.calculated_at}</span>
+          </div>
+          {!!analysis.profile_gaps?.length && (
+            <div className="notice warn">
+              <Icon name="warn" size={16} />
+              <span>{analysis.profile_gaps.join('；')}</span>
+            </div>
+          )}
+          {!analysis.profile_ready && <div className="empty">请先补全个人信息，再生成路径建议。</div>}
+          <div className="analysis-grid">
+            {(analysis.recommendations || []).map((item: any) => (
+              <article className="analysis-card" key={item.key}>
+                <div className="analysis-card-head">
+                  <div>
+                    <span className={`pill ${item.status === '可报' ? 'green' : item.status === '需核实' ? 'amber' : 'muted'}`}>{item.status}</span>
+                    <h4>{item.title}</h4>
+                  </div>
+                  <div className="match-score">
+                    <b>{item.score}</b>
+                    <span>{item.match_level}</span>
+                  </div>
+                </div>
+                <div className="analysis-detail">
+                  <b>判断理由</b>
+                  <span>{(item.reasons || []).join('；') || '资料不足'}</span>
+                </div>
+                <div className="analysis-detail">
+                  <b>公开数据证据</b>
+                  <span>{(item.evidence || []).join('；') || '暂无可匹配证据'}</span>
+                </div>
+                {!!item.gaps?.length && (
+                  <div className="analysis-detail analysis-gap">
+                    <b>数据缺口</b>
+                    <span>{item.gaps.join('；')}</span>
+                  </div>
+                )}
+                <div className="analysis-detail">
+                  <b>下一步核实</b>
+                  <span>{(item.next_checks || []).join('；')}</span>
+                </div>
+                <button className="link-btn analysis-link" onClick={() => onNavigate(item.page as PageKey)}>
+                  查看相关数据 <Icon name="arrow" size={14} />
+                </button>
+              </article>
+            ))}
+          </div>
+        </div>
+      )}
+    </SectionCard>
+  )
+}
+
+function ProfilePage({
+  profile,
+  onChange,
+  onNavigate,
+}: {
+  profile: Profile
+  onChange: (p: Profile) => void
+  onNavigate: (p: PageKey) => void
+}) {
   const [draft, setDraft] = useState<Profile>(profile)
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -1012,6 +1111,8 @@ function ProfilePage({ profile, onChange }: { profile: Profile; onChange: (p: Pr
         </div>
       </SectionCard>
 
+      <PersonalAnalysisPanel profile={profile} onNavigate={onNavigate} />
+
       <SectionCard
         title="我的关注"
         extra={(
@@ -1117,7 +1218,7 @@ export default function App() {
           {page === 'compare' && <ComparePage profile={profile} />}
           {page === 'calendar' && <CalendarPage profile={profile} />}
           {page === 'overview' && <OverviewPage bootstrap={bootstrap} />}
-          {page === 'profile' && <ProfilePage profile={profile} onChange={setProfile} />}
+          {page === 'profile' && <ProfilePage profile={profile} onChange={setProfile} onNavigate={setPage} />}
         </div>
       </main>
     </div>

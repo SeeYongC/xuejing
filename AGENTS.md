@@ -43,6 +43,7 @@ python main.py                        # pywebview 加载 frontend/dist
 - `pathway/onboarding.py` — 四步引导（学历 / 年级 / 目标 / 专业），结果写入个人档案
 - `pathway/web_api.py` — pywebview 暴露给 React 的接口层（`WebApi`）
 - `pathway/eligibility.py` — 资格诊断规则：专插本 / 考研 / 考公的「可报 / 需核实 / 暂不适用」
+- `pathway/personal_analysis.py` — 个人条件分析：资料检查、路径匹配、证据与缺口
 - `pathway/database.py` — `PathwayDatabase`，封装对 `pathway.db` 的**全部**查询；
   界面层不直接拼 SQL，新增查询在这里加方法
 - `pathway/analysis.py` — `PathAnalysis`，跨学历层次对比、路径时间成本、就业去向画像
@@ -54,7 +55,7 @@ python main.py                        # pywebview 加载 frontend/dist
 - `pathway/window.py` — 主窗口（左侧导航 + 右侧内容区），
   决策链四步 + 数据查询四页 + 数据总览，共 9 个页面
 - `frontend/src/App.tsx` — React 主界面：首页、专科、本科、升学路径对比、
-  考试时间、数据总览、个人信息
+  考试时间、数据总览、个人信息与个人条件分析
 - `frontend/src/api.ts` — 前端 API 封装与 pywebview 就绪等待
 
 ## 数据管道

@@ -227,3 +227,17 @@ class PathwayDatabase:
         """最新一年的考公数据。"""
         rows = self.list_kaogong_csy()
         return rows[0] if rows else {}
+
+    def list_kaogong_jobs_for_match_csy(self, keyword: str = "") -> list:
+        """按学历关键词读取职位，供个人条件分析做进一步筛选。"""
+        sql = (
+            "SELECT system, unit, position, headcount, education, degree, "
+            "major_graduate, major_undergrad, major_college, fresh_only, grassroots "
+            "FROM kaogong_job_detail"
+        )
+        params = {}
+        if keyword:
+            sql += " WHERE education LIKE :keyword"
+            params["keyword"] = "%" + keyword + "%"
+        sql += " ORDER BY system, unit"
+        return self.query_csy(sql, params)
